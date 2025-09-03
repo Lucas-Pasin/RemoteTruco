@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "carta.h"
 using namespace std;
 
 class player{
@@ -8,7 +9,7 @@ class player{
 
         player();
         player(string nome);
-        void Draw();
+        void Draw() const;
 
     private:
         string nome;

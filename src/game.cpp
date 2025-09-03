@@ -72,34 +72,8 @@ void game::dealCards(){
 }
 
 void game::Draw(){
-    players[0].Draw();
-    players[1].Draw();
+    interface.Draw(players[0]);
 
-}
-
-player::player() {
-    this->nome = "John Doe";
-    this->score = 0;
-    for(int i=0;i<3;i++){
-        this->mao[i].setPos(i*100.0f + 120.0f, 600.0f);
-    }
-    
-}
-
-player::player(string nome){
-    this->nome = nome;
-    this->score = 0;
-    for (int i = 0; i < 3; i++) {
-        this->mao[i] = carta();
-        this->mao[i].setPos(i*100.0f + 120.0f, 600.0f);
-    }
-}
-
-void player::Draw(){
-    for(int i=0;i<3;i++){
-        mao[i].Draw();
-    }
-    DrawRectangleLines(100,300,600,200,WHITE);
 }
 
 // Função de inicialização das texturas globais
@@ -152,6 +126,13 @@ void game::SelectHandCard(){
     }
 
     if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
+        if(arrastando){
+            if(CheckCollisionPointRec(GetMousePosition(), players[0].mao[cartaSelecionada].getRect())){
+                mesa[mesacount] = players[0].mao[cartaSelecionada];
+                mesacount++;
+                players[0].mao[cartaSelecionada].setPos(900.0f,900.0f);
+            }
+        }
         arrastando = false;
         cartaSelecionada = -1;
     }

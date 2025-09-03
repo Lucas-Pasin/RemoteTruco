@@ -1,5 +1,4 @@
 #include <raylib.h>
-#include "carta.h"
 #include "game.h"
 
 

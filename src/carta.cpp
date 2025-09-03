@@ -40,7 +40,7 @@ int carta::getScore(){
     return this->score;
 }
 
-void carta::Draw(){
+void carta::Draw() const{
     DrawTexture(*this->textura,cartaRect.x,cartaRect.y,WHITE);
 }
 
