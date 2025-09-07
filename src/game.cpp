@@ -71,9 +71,12 @@ void game::dealCards(){
     }
 }
 
-void game::Draw(){
-    interface.Draw(players[0]);
+const vector<carta> &game::getTable() const{
+    return mesa;
+}
 
+void game::Draw(){
+    interface.Draw(*this);
 }
 
 // Função de inicialização das texturas globais
@@ -105,10 +108,11 @@ void game::Update(){
     
 }
 
-// Função para verificar colisão do mouse com as cartas na mão do jogador
+// Função para selecionar e arrastar cartas da mão do jogador para a mesa
 void game::SelectHandCard(){
     static bool arrastando = false;
     static int cartaSelecionada = -1;
+    const Rectangle table_rect = interface.getRec();
 
     if(!arrastando && IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
         for(int i=0;i<3;i++){
@@ -121,16 +125,21 @@ void game::SelectHandCard(){
     }
     
     if(arrastando && IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
-        const Rectangle tem_rec = players[0].mao[cartaSelecionada].getRect();
-        players[0].mao[cartaSelecionada].setPos(GetMouseX()- tem_rec.width/2, GetMouseY()-tem_rec.height/2);
+        Rectangle tem_rec = players[0].mao[cartaSelecionada].getRect();
+        players[0].mao[cartaSelecionada].setPos(GetMouseX() - tem_rec.width/2, 
+                                                GetMouseY()-tem_rec.height/2);
     }
 
     if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
         if(arrastando){
-            if(CheckCollisionPointRec(GetMousePosition(), players[0].mao[cartaSelecionada].getRect())){
-                mesa[mesacount] = players[0].mao[cartaSelecionada];
-                mesacount++;
+            if(CheckCollisionPointRec(GetMousePosition(),table_rect)){
+                players[0].mao[cartaSelecionada].setPos(65 + table_rect.x +100*mesa.size(),
+                                                             table_rect.y + 18.3f);
+                mesa.push_back(players[0].mao[cartaSelecionada]);
                 players[0].mao[cartaSelecionada].setPos(900.0f,900.0f);
+            }else{
+                // Retorna a carta para a posição original se não for colocada na mesa
+                players[0].mao[cartaSelecionada].setPos(cartaSelecionada*100.0f + 260.0f, 680.0f);
             }
         }
         arrastando = false;

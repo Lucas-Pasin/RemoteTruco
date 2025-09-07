@@ -40,8 +40,12 @@ int carta::getScore(){
     return this->score;
 }
 
-void carta::Draw() const{
-    DrawTexture(*this->textura,cartaRect.x,cartaRect.y,WHITE);
+void carta::Draw(bool figShow) const{
+    if(figShow){
+        DrawTexture(*this->textura,cartaRect.x,cartaRect.y,WHITE);
+        return;
+    }
+    DrawTexture(cardBackTexture,cartaRect.x,cartaRect.y,WHITE);
 }
 
 void carta::setPos(float x,float y){

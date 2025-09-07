@@ -6,13 +6,13 @@
 class game{
     public: 
         player players[2];
-        int mesacount=0;
         game();
         ~game();
         void StartGame();
         void shuffleDeck();
         void buildDeck();
         void dealCards();
+        const vector<carta> &getTable() const;
         void SelectHandCard();
 
         void Draw();
@@ -20,7 +20,7 @@ class game{
         
     private:
         UI interface;
-        carta mesa[6]; 
+        vector <carta> mesa; 
         carta deck[40]; 
 };
 

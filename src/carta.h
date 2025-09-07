@@ -32,7 +32,7 @@ class carta{
 
         //rendering
         void updateDraw();
-        void Draw() const;
+        void Draw(bool figShow=true) const;
     
     private:
         int numero;

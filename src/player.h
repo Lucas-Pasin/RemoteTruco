@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "carta.h"
 using namespace std;
 
