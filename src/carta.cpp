@@ -48,6 +48,22 @@ void carta::Draw(bool figShow) const{
     DrawTexture(cardBackTexture,cartaRect.x,cartaRect.y,WHITE);
 }
 
+void carta::cartaToCard(card cartinha){
+    this->numero = cartinha.numero;
+    this->naipe = cartinha.naipe;
+    this->score = cartinha.score;
+    *this->textura = cardTextures[numero + (int)naipe *10];
+}
+
+card carta::cardGet(){
+    card cartinha;
+    cartinha.numero = numero;
+    cartinha.naipe  = naipe;
+    cartinha.score  = score;
+    
+    return cartinha;
+}
+
 void carta::setPos(float x,float y){
     this->cartaRect.x = x;
     this->cartaRect.y = y;

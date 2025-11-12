@@ -5,12 +5,17 @@
 
 int main() 
 {
+
+    
+    game truco = game();
+    
+
+
     Color green = {20,160,133,255};
     InitWindow(800, 800, "Truco Online");
     SetTargetFPS(60);
-
+    
     LoadAllCardTextures();
-    game truco = game();
     truco.StartGame();
     
 

@@ -2,6 +2,7 @@
 #include "carta.h"
 #include "player.h"
 #include "UI.h"
+#include "network.h"
 
 class game{
     public: 
@@ -9,18 +10,19 @@ class game{
         game();
         ~game();
         void StartGame();
-        void shuffleDeck();
-        void buildDeck();
-        void dealCards();
         const vector<carta> &getTable() const;
         void SelectHandCard();
 
         void Draw();
         void Update();
-        
+        vector <carta> mesa;
+        gamestate estado;
+        PacoteTurno PacoteAtual;
+        network net;
     private:
         UI interface;
-        vector <carta> mesa; 
+        
+         
         carta deck[40]; 
 };
 

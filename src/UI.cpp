@@ -29,5 +29,4 @@ void UI::Draw(const game& g){
     DrawRectangleLinesEx(tableRect,2.0f, WHITE);
     DrawTable(g.getTable());
     DrawHand(g.players[0]);
-    
 }

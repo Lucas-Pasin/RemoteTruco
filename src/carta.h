@@ -11,6 +11,11 @@ typedef enum{
     CLUB
 } naipes;
 
+struct card{
+    int numero;
+    naipes naipe;
+    int score;
+};
 
 class carta{
     public:
@@ -22,6 +27,8 @@ class carta{
         ~carta();
 
         //methods
+        void cartaToCard(card cartinha);
+        card cardGet();
         int getNumber();
         naipes getNaipe();
         int getScore();

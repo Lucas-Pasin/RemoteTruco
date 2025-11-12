@@ -3,73 +3,15 @@
 Texture2D cardTextures[40];
 Texture2D cardBackTexture;
 
-void game::buildDeck(){
-    naipes naipe;
-    int score;
-
-    int var=1;
-    int d=0;
-    // Inicializador baralho
-    for(int i=0;i<4;i++){
-        naipe = (naipes)i;
-        for(int j=0;j<10;j++){
-            if(j == 7){
-                var = 3;
-            }
-            score = j+var;
-            if(j < 3) score = 12+j+var;
-            switch(naipe){
-                case DIAMOND:
-                    if(j == 6) score = 16;
-                break;
-                case SPADE:
-                    if(j == 6) score = 17;     
-                    if(j == 0) score = 19; 
-                break;
-                case CLUB:
-                    if(j == 0) score = 18;        
-                break;
-                case HEART:
-                break;
-            }
-            deck[j+d] = carta(j+var,naipe,score,&cardTextures[j+d]);
-            //printf("Carta %d do naipe %s criada!\n",j+var,naipe == DIAMOND ? "Ouro" : naipe == HEART ? "Copa" : naipe == SPADE ? "Espada" : "Paus");
-        }
-        d += 10;
-        var=1;
-    }
-}
-
-void game::shuffleDeck() {
-    carta temp;
-    int r;
-    for (int i = 39; i > 0; i--) {
-        r = GetRandomValue(0, i);
-        temp = deck[i];
-        deck[i] = deck[r];
-        deck[r] = temp;
-    }
-}
-
 game::game(){
     players[0] = player("Jogador 1");
     players[1] = player("Jogador 2");
 }
 
 void game::StartGame(){
-    buildDeck();
-    shuffleDeck();
-    dealCards();
+    net.startThread(*this);
 }
 
-void game::dealCards(){
-    for(int i=0;i<2;i++){
-        for(int j=0;j<3;j++){
-            players[i].mao[j] = deck[i*3 + j];
-            players[i].mao[j].setPos(j*100.0f + 260.0f, 680.0f - i*660.0f);
-        }
-    }
-}
 
 const vector<carta> &game::getTable() const{
     return mesa;
@@ -104,7 +46,20 @@ void UnloadAllCardTextures() {
 game::~game(){}
 
 void game::Update(){
-    SelectHandCard();
+
+    switch ((gamestate)PacoteAtual.state){
+        case PLAY:
+            SelectHandCard();
+            break;
+        case WAIT:
+            
+            break;
+        case ROUND_START:
+            
+            break;
+        default:
+            break;
+    }
     
 }
 
