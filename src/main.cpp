@@ -7,7 +7,7 @@ int main()
 {
 
     
-    game truco = game();
+    game truco;
     
 
 

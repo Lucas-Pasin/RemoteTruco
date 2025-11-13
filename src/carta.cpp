@@ -6,10 +6,11 @@ carta::carta()
     : numero(0), naipe(static_cast<naipes>(0)), score(0), cartaRect{0, 0,0 ,0}, textura()
 {
     //carregar textura
-    
     this->textura = &cardBackTexture;
-    cartaRect.height = textura->height;
-    cartaRect.width = textura->width;
+    // don't rely on texture being loaded yet; use a sensible default size
+    cartaRect.width = 70.0f;
+    cartaRect.height = 90.0f;
+    this->active = false; // default empty card
 }
 
 carta::carta(int num, naipes naip, int scor, Texture2D* texture){
@@ -20,8 +21,13 @@ carta::carta(int num, naipes naip, int scor, Texture2D* texture){
     //carregar textura
     if(num > 7) num -= 2; //ajustar numero para pegar a imagem correta
     this->textura = texture;
-    cartaRect.height = textura->height;
-    cartaRect.width = textura->width;
+    if (this->textura && this->textura->height > 0) {
+        cartaRect.height = this->textura->height;
+    }
+    if (this->textura && this->textura->width > 0) {
+        cartaRect.width = this->textura->width;
+    }
+    this->active = true;
 }
 
 carta::~carta(){
@@ -41,18 +47,38 @@ int carta::getScore(){
 }
 
 void carta::Draw(bool figShow) const{
+    if(!this->active) return; // don't draw empty slots
+
     if(figShow){
-        DrawTexture(*this->textura,cartaRect.x,cartaRect.y,WHITE);
+        DrawTexture(*this->textura, cartaRect.x, cartaRect.y, WHITE);
         return;
     }
-    DrawTexture(cardBackTexture,cartaRect.x,cartaRect.y,WHITE);
+    DrawTexture(cardBackTexture, cartaRect.x, cartaRect.y, WHITE);
 }
 
 void carta::cartaToCard(card cartinha){
     this->numero = cartinha.numero;
     this->naipe = cartinha.naipe;
     this->score = cartinha.score;
-    *this->textura = cardTextures[numero + (int)naipe *10];
+    int num = this->numero;
+    if(num > 7) num -= 2; //ajustar numero para pegar a imagem correta
+    int index = num + (int)naipe * 10;
+    if (index >= 0 && index < 40) {
+        // point to the correct texture in the global array
+        this->textura = &cardTextures[index];
+        // update rect size from the assigned texture
+        this->cartaRect.width = this->textura->width;
+        this->cartaRect.height = this->textura->height;
+    }
+    this->active = true;
+}
+
+void carta::setActive(bool a){
+    this->active = a;
+}
+
+bool carta::isActive() const {
+    return this->active;
 }
 
 card carta::cardGet(){

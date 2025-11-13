@@ -40,6 +40,9 @@ class carta{
         //rendering
         void updateDraw();
         void Draw(bool figShow=true) const;
+        // active flag: whether this carta represents a real card in hand/deck
+        void setActive(bool a);
+        bool isActive() const;
     
     private:
         int numero;
@@ -47,4 +50,5 @@ class carta{
         int score;
         Rectangle cartaRect = { 400.0f, 400.0f , 70.0f, 90.0f };
         Texture2D* textura;
+    bool active = false;
 };

@@ -5,6 +5,7 @@ player::player() {
     this->score = 0;
     for(int i=0;i<3;i++){
         this->mao[i].setPos(i*100.0f + 120.0f, 600.0f);
+        this->mao[i].setActive(false);
     }
     
 }
@@ -15,6 +16,7 @@ player::player(string nome){
     for (int i = 0; i < 3; i++) {
         this->mao[i] = carta();
         this->mao[i].setPos(i*100.0f + 120.0f, 600.0f);
+        this->mao[i].setActive(false);
     }
 }
 
