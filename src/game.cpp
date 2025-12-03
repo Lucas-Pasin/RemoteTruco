@@ -98,7 +98,6 @@ void game::ApplyPacoteToHands(){
     PacoteTurno* activePacket = localPlayPending ? &pendingPacket : &PacoteAtual;
 
     int p0_index = 0;
-    Place myplace = activePacket->isFirst ? table : enemy_table;
 
     for (int i = 0; i < 9; ++i) {
         CardState &cs = activePacket->cards[i];
@@ -115,8 +114,8 @@ void game::ApplyPacoteToHands(){
         ctmp.cartaToCard(tmp);
         Rectangle table_rect = interface.getRec();
 
-        if(cs.place == myplace) {
-            // My table
+        if(cs.place == table) {
+            // My table (sempre table para mim)
             ctmp.setPos(65 + table_rect.x + 100.0f * mesa.size(), table_rect.y + 18.3f);
             mesa.push_back(ctmp);
         } else if (cs.place == hand) {
@@ -124,8 +123,8 @@ void game::ApplyPacoteToHands(){
             ctmp.setPos(p0_index * 100.0f + 180.0f, 650.0f);
             players[0].mao.push_back(ctmp);
             p0_index++;
-        } else {
-            // Enemy table
+        } else if (cs.place == enemy_table) {
+            // Enemy table (sempre enemy_table para o inimigo)
             ctmp.setPos(65 + table_rect.x + 100.0f * mesa_enemy.size(), table_rect.y - 400 + 18.3f);
             mesa_enemy.push_back(ctmp);
         }
@@ -184,10 +183,11 @@ void game::SelectHandCard(){
                     }
 
                     // First slot: the played card on table
+                    // Cliente sempre joga em "table" (sua própria mesa)
                     pkt.cards[0].numero = playedCard.numero;
                     pkt.cards[0].naipe = playedCard.naipe;
                     pkt.cards[0].score = playedCard.score;
-                    pkt.cards[0].place = (pkt.isFirst ? table : enemy_table);
+                    pkt.cards[0].place = table;  // Sempre table para o cliente
 
                     // Remaining slots: cards still in hand (excluding the played one)
                     int k = 1;
