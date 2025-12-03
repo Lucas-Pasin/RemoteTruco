@@ -6,7 +6,7 @@ using namespace std;
 
 class player{
     public:
-        carta mao[3];
+        std::vector<carta> mao;
 
         player();
         player(string nome);

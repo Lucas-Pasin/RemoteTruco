@@ -98,122 +98,92 @@ void game::Update(){
 
 // Map PacoteAtual into players' hands and the mesa
 void game::ApplyPacoteToHands(){
-    // Basic assumptions (documented):
-    // - PacoteAtual.cards contains CardState entries where CardState.place indicates hand or table.
-    // - We will assign the first up-to-3 hand cards to players[0].mao from left to right,
-    //   then the next up-to-3 hand cards to players[1].mao. Cards with invalid numero (<0)
-    //   will result in an inactive slot.
-
-    // Clear current table and rebuild from packet
     mesa.clear();
     mesa_enemy.clear();
 
-    int p0_index = 0;
-    int p1_index = 0;
+    // Reseta mao para buildar a partir dos pacotes
+    players[0].mao.clear();
+    players[1].mao.clear();
 
-    // Reset all hand slots to inactive before applying
-    for (int i = 0; i < 3; ++i) {
-        players[0].mao[i].setActive(false);
-        players[1].mao[i].setActive(false);
+    // Index das cartas na mão do jogador 0
+    int p0_index = 0;
+
+    Place myplace = enemy_table;
+    if(PacoteAtual.isFirst){
+        myplace = table;
     }
 
     for (int i = 0; i < 9; ++i) {
         CardState &cs = PacoteAtual.cards[i];
 
-        // ignore placeholder/invalid cards
-        if (cs.numero < 0) continue;
+        if(cs.numero < 0 || cs.place < hand || cs.place > enemy_table || cs.numero > 12) {
+            // invalid card slot; skip
+            continue;
+        }
+        printf("Applying card %d to place %d\n", cs.numero, cs.place);
 
-        if (cs.place == table) {
-            // Interpret table ownership: if the packet indicates isFirst, then table entries
-            // belong to the player who is 'first'. If PacoteAtual.isFirst differs from our
-            // local role, we should render those as enemy_table for the local UI.
-            bool serverMarksFirst = PacoteAtual.isFirst;
-            // If server says this packet's 'first' is not us, then entries with 'table'
-            // should be rendered as enemy_table for us. We'll render accordingly by
-            // converting to enemy_table when ownership doesn't match.
-            bool convertToEnemy = false;
-            // Determine local role: assume our client role == PacoteAtual.isFirst (best-effort)
-            if (serverMarksFirst != this->PacoteAtual.isFirst) convertToEnemy = true;
-            // NOTE: Above line is conservative; ideally the client should know its own role
-            // from connection/login flow. Here we keep behavior simple.
-            // Convert to carta and push to mesa
-            card temp;
-            temp.numero = cs.numero;
-            temp.naipe = cs.naipe;
-            temp.score = cs.score;
-
-            // create a carta and set its texture
-            carta c;
-            c.cartaToCard(temp);
-            // Position the card on the table
+        if(cs.place == myplace) {
+            // Card belongs to this player's table
+            card tmp;
+            tmp.numero = cs.numero;
+            tmp.naipe = cs.naipe;
+            tmp.score = cs.score;
+            carta ctmp;
+            ctmp.cartaToCard(tmp);
             Rectangle table_rect = interface.getRec();
-            float x = 65 + table_rect.x + 100.0f * mesa.size();
-            float y = table_rect.y + 18.3f;
-            c.setPos(x, y);
-            mesa.push_back(c);
-        } else if (cs.place == enemy_table) {
-            // enemy table card: position separately (e.g., opposite side of table)
-            card temp_e;
-            temp_e.numero = cs.numero;
-            temp_e.naipe = cs.naipe;
-            temp_e.score = cs.score;
-
-            carta c_e;
-            c_e.cartaToCard(temp_e);
-            // Place enemy cards near the top between players
-            Rectangle table_rect = interface.getRec();
-            float x_e = 65 + table_rect.x + 100.0f * mesa.size();
-            float y_e = table_rect.y + 18.3f - 150.0f; // offset upward for enemy
-            c_e.setPos(x_e, y_e);
-            mesa.push_back(c_e);
+            ctmp.setPos(65 + table_rect.x + 100.0f * mesa.size(), table_rect.y + 18.3f);
+            mesa.push_back(ctmp);
         } else if (cs.place == hand) {
-            card temp;
-            temp.numero = cs.numero;
-            temp.naipe = cs.naipe;
-            temp.score = cs.score;
-
-            if (p0_index < 3) {
-                // assign to player 0
-                players[0].mao[p0_index].cartaToCard(temp);
-                players[0].mao[p0_index].setPos(p0_index*100.0f + 120.0f, 600.0f);
-                players[0].mao[p0_index].setActive(true);
-                ++p0_index;
-            } else if (p1_index < 3) {
-                // assign to player 1
-                players[1].mao[p1_index].cartaToCard(temp);
-                players[1].mao[p1_index].setPos(p1_index*100.0f + 120.0f, 100.0f);
-                players[1].mao[p1_index].setActive(true);
-                ++p1_index;
-            } else {
-                // extra hand cards ignored
-            }
+            // Card belongs to a player's hand
+            card tmp;
+            tmp.numero = cs.numero;
+            tmp.naipe = cs.naipe;
+            tmp.score = cs.score;
+            carta ctmp;
+            ctmp.cartaToCard(tmp);
+            // Assign to player 0
+            ctmp.setPos(p0_index * 100.0f + 180.0f, 650.0f);
+            players[0].mao.push_back(ctmp);
+            p0_index++;
+        } else{
+            // Card belongs to enemy's table
+            card tmp;
+            tmp.numero = cs.numero;
+            tmp.naipe = cs.naipe;
+            tmp.score = cs.score;
+            carta ctmp;
+            ctmp.cartaToCard(tmp);
+            Rectangle table_rect = interface.getRec();
+            ctmp.setPos(65 + table_rect.x + 100.0f * mesa_enemy.size(), table_rect.y - 400 + 18.3f);
+            mesa_enemy.push_back(ctmp);
         }
     }
 
-    // Deactivate any remaining slots that didn't receive a card
-    for (int i = p0_index; i < 3; ++i) players[0].mao[i].setActive(false);
-    for (int i = p1_index; i < 3; ++i) players[1].mao[i].setActive(false);
+    printf("Saio \n");
+
+    // If any slots remain (unlikely), ensure they are inactive - not needed with dynamic vector
 
     // If we have a local pending play, append it visually to the mesa so the local player
     // sees the card immediately while waiting for server confirmation.
-    if (localPlayPending) {
-        for (int i = 0; i < 9; ++i) {
-            CardState &pcs = pendingPacket.cards[i];
-            if (pcs.numero < 0) continue;
-            // Only append table entries from the pending packet
-            if (pcs.place == table) {
-                card tmp;
-                tmp.numero = pcs.numero;
-                tmp.naipe = pcs.naipe;
-                tmp.score = pcs.score;
-                carta ctmp;
-                ctmp.cartaToCard(tmp);
-                Rectangle table_rect = interface.getRec();
-                ctmp.setPos(65 + table_rect.x + 100.0f * mesa.size(), table_rect.y + 18.3f);
-                mesa.push_back(ctmp);
-            }
-        }
-    }
+
+    //if (localPlayPending) {
+    //    for (int i = 0; i < 9; ++i) {
+    //        CardState &pcs = pendingPacket.cards[i];
+    //        if (pcs.numero < 0) continue;
+    //        // Only append table entries from the pending packet
+    //        if (pcs.place == table) {
+    //            card tmp;
+    //            tmp.numero = pcs.numero;
+    //            tmp.naipe = pcs.naipe;
+    //            tmp.score = pcs.score;
+    //            carta ctmp;
+    //            ctmp.cartaToCard(tmp);
+    //            Rectangle table_rect = interface.getRec();
+    //            ctmp.setPos(65 + table_rect.x + 100.0f * mesa.size(), table_rect.y + 18.3f);
+    //            mesa.push_back(ctmp);
+    //        }
+    //    }
+    //}
 }
 
 void game::PushPacote(const PacoteTurno& p) {
@@ -233,19 +203,19 @@ void game::SelectHandCard(){
         Vector2 mp = GetMousePosition();
         // debug
         printf("MouseDown at %.1f, %.1f\n", mp.x, mp.y);
-        for(int i=0;i<3;i++){
+        for (size_t i = 0; i < players[0].mao.size(); ++i) {
             if (!players[0].mao[i].isActive()) continue; // skip empty slots
-            if(CheckCollisionPointRec(GetMousePosition(), players[0].mao[i].getRect())){
+            if (CheckCollisionPointRec(GetMousePosition(), players[0].mao[i].getRect())) {
                 arrastando = true;
-                cartaSelecionada = i;
-                printf("Picked card %d\n", i);
+                cartaSelecionada = (int)i;
+                printf("Picked card %d\n", (int)i);
                 break;
             }
         }
     }
     
     if(arrastando && IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
-        if (cartaSelecionada >= 0 && cartaSelecionada < 3) {
+        if (cartaSelecionada >= 0 && cartaSelecionada < (int)players[0].mao.size()) {
             Rectangle tem_rec = players[0].mao[cartaSelecionada].getRect();
             players[0].mao[cartaSelecionada].setPos(GetMouseX() - tem_rec.width/2, 
                                                     GetMouseY()-tem_rec.height/2);
@@ -275,24 +245,56 @@ void game::SelectHandCard(){
                 // otherwise our table is `enemy_table` (server may not tag ownership)
                 pkt.cards[0].place = (this->PacoteAtual.isFirst ? table : enemy_table);
 
-                // Update local UI: place on table and mark slot empty
-                players[0].mao[cartaSelecionada].setPos(900.0f,900.0f);
-                players[0].mao[cartaSelecionada].setActive(false);
-                // position the visible card on mesa
-                played.numero = pkt.cards[0].numero; // ensure consistency
-                carta shown;
-                shown.cartaToCard(played);
-                shown.setPos(65 + table_rect.x + 100.0f * mesa.size(), table_rect.y + 18.3f);
-                mesa.push_back(shown);
+                // Remove the card from the local hand so it won't reappear when we build the packet
+                if (cartaSelecionada >= 0 && cartaSelecionada < (int)players[0].mao.size()) {
+                    // save played card, then erase from hand
+                    card playedCard = players[0].mao[cartaSelecionada].cardGet();
+                    players[0].mao.erase(players[0].mao.begin() + cartaSelecionada);
 
-                // Set pendingPacket so ApplyPacoteToHands will show our local play until server confirms
-                this->pendingPacket = pkt;
-                this->localPlayPending = true;
-                // send to server (non-blocking behavior handled in network)
-                net.sendPlay(*this);
+                    // Recompute positions for remaining cards in hand
+                    for (size_t idx = 0; idx < players[0].mao.size(); ++idx) {
+                        players[0].mao[idx].setPos(idx * 100.0f + 120.0f, 600.0f);
+                    }
+
+                    // Build a PacoteTurno describing this play based on the new hand (without the played card)
+                    // mark whether this client believes it's the first player
+                    pkt.isFirst = this->PacoteAtual.isFirst;
+                    pkt.state = WAIT; // after playing, wait for server
+                    // initialize all as invalid
+                    for (int k = 0; k < 9; ++k) {
+                        pkt.cards[k].numero = -1;
+                        pkt.cards[k].score = 0;
+                        pkt.cards[k].place = hand;
+                    }
+                    // put the played card as first table entry
+                    pkt.cards[0].numero = playedCard.numero;
+                    pkt.cards[0].naipe = playedCard.naipe;
+                    pkt.cards[0].score = playedCard.score;
+                    pkt.cards[0].place = (this->PacoteAtual.isFirst ? table : enemy_table);
+
+                    // now serialize remaining hand cards into the packet (starting at index 1)
+                    int k = 1;
+                    for (size_t h = 0; h < players[0].mao.size() && k < 9; ++h) {
+                        card hc = players[0].mao[h].cardGet();
+                        pkt.cards[k].numero = hc.numero;
+                        pkt.cards[k].naipe = hc.naipe;
+                        pkt.cards[k].score = hc.score;
+                        pkt.cards[k].place = hand;
+                        ++k;
+                    }
+
+                    // Set pendingPacket so ApplyPacoteToHands will show our local play until server confirms
+                    this->pendingPacket = pkt;
+                    this->localPlayPending = true;
+                    // send to server (non-blocking behavior handled in network)
+                    net.sendPlay(*this);
+                }
             }else{
                 // Retorna a carta para a posição original se não for colocada na mesa
-                players[0].mao[cartaSelecionada].setPos(cartaSelecionada*100.0f + 260.0f, 680.0f);
+                // recompute positions to restore
+                for (size_t idx = 0; idx < players[0].mao.size(); ++idx) {
+                    players[0].mao[idx].setPos(idx*100.0f + 120.0f, 600.0f);
+                }
                 printf("Dropped card %d outside table\n", cartaSelecionada);
             }
         }

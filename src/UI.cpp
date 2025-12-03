@@ -9,7 +9,7 @@ Rectangle UI::RecOffsetPos(Rectangle rec, float offsetX,float offsetY){
 }
 
 void UI::DrawHand(const player& jogador){
-    for(int i=0;i<3;i++){
+    for (size_t i = 0; i < jogador.mao.size(); ++i) {
         if (jogador.mao[i].isActive()) {
             jogador.mao[i].Draw(true);
         }
@@ -39,7 +39,7 @@ void UI::Draw(const game& g){
     DrawHand(g.players[0]);
     // debug overlay: show counts
     int active = 0;
-    for (int i = 0; i < 3; ++i) if (g.players[0].mao[i].isActive()) ++active;
+    for (size_t i = 0; i < g.players[0].mao.size(); ++i) if (g.players[0].mao[i].isActive()) ++active;
     std::string dbg = "Hand active: " + std::to_string(active) + "  Mesa: " + std::to_string(g.getTable().size());
     DrawText(dbg.c_str(), 10, 10, 12, WHITE);
 }
