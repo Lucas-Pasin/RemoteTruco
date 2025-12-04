@@ -149,10 +149,39 @@ void game::Update(){
             vale4Aceito = true;
             break;
         case WIN:
+            mesa.clear();
+            mesa_enemy.clear();
+            players[0].mao.clear();
+            players[1].mao.clear();
+            pacoteQueue.empty();
+
             // printf("You win!\n");
             break;
         case LOSE:
+            mesa.clear();
+            mesa_enemy.clear();
+            players[0].mao.clear();
+            players[1].mao.clear();
+            pacoteQueue.empty();
             // printf("You lose!\n");
+            break;
+        case ROUND_WIN:
+            mesa.clear();
+            mesa_enemy.clear();
+            players[0].mao.clear();
+            players[1].mao.clear();
+            pacoteQueue.empty();
+            printf("You won this round!\n");
+            // Aguarda próximo ROUND_START do servidor
+            break;
+        case ROUND_LOSE:
+            mesa.clear();
+            mesa_enemy.clear();
+            players[0].mao.clear();
+            players[1].mao.clear();
+            pacoteQueue.empty();
+            printf("You lost this round!\n");
+            // Aguarda próximo ROUND_START do servidor
             break;
         default:
             break;
