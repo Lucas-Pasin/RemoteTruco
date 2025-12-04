@@ -21,6 +21,8 @@ game::game(){
         pendingPacket.cards[i].score = 0;
         pendingPacket.cards[i].place = hand;
     }
+    // Initialize estado
+    this->estado = WAIT;
 }
 
 void game::StartGame(){
@@ -60,11 +62,13 @@ game::~game(){}
 
 void game::Update(){
     // Drain any incoming network packets (thread-safe) and keep the latest
+    bool receivedNewPacket = false;
     {
         std::lock_guard<std::mutex> lock(pacoteMutex);
         while (!pacoteQueue.empty()) {
             PacoteAtual = pacoteQueue.front();
             pacoteQueue.pop();
+            receivedNewPacket = true;
             // Server confirmed our play, clear pending flag
             localPlayPending = false;
         }
@@ -72,23 +76,40 @@ void game::Update(){
 
     // Apply network packet OR pending packet to keep UI in sync
     ApplyPacoteToHands();
-    this->estado = (gamestate)PacoteAtual.state;
-    switch ((gamestate)PacoteAtual.state){
+    
+    // Only update estado if we received a new packet from server
+    if (receivedNewPacket) {
+        this->estado = (gamestate)PacoteAtual.state;
+    }
+    
+    // Use this->estado (persists between frames) instead of PacoteAtual.state
+    switch (this->estado){
         case PLAY:
             SelectHandCard();
-            if(IsRectangleClicked(interface.getTrucoButtonRect())){
-                SendGamestate(TRUCO);
+            if(!(trucoAceito || retrucoAceito || vale4Aceito)){
+                if(IsRectangleClicked(interface.getTrucoButtonRect())){
+                    SendGamestate(TRUCO);
+                }
             }
+            
             break;
         case WAIT:
+            // Waiting for server response - no actions allowed
             break;
         case ROUND_START:
+            trucoAceito = false;
+            retrucoAceito = false;
+            vale4Aceito = false;
             break;
         case TRUCO:
-            if(IsRectangleClicked(interface.getTrucoButtonRect())){
-                SendGamestate(RETRUCO);
+            if(!(trucoAceito || retrucoAceito)){
+                if(IsRectangleClicked(interface.getTrucoButtonRect())){
+                    trucoAceito = true;
+                    SendGamestate(RETRUCO);
+                }
             }
             if(IsRectangleClicked(interface.getAcceptButtonRect())){
+                trucoAceito = true;
                 SendGamestate(TRUCO_ACCEPT);
             }
             if(IsRectangleClicked(interface.getRejectButtonRect())){
@@ -96,18 +117,42 @@ void game::Update(){
             }
             break;
         case RETRUCO:
+            if(!retrucoAceito){
+                if(IsRectangleClicked(interface.getTrucoButtonRect())){
+                    retrucoAceito = true;
+                    SendGamestate(VALE4);
+                }
+            }
             if(IsRectangleClicked(interface.getAcceptButtonRect())){
+                retrucoAceito = true;
                 SendGamestate(RETRUCO_ACCEPT);
             }
             if(IsRectangleClicked(interface.getRejectButtonRect())){
                 SendGamestate(RETRUCO_REJECT);
             }     
             break;
+        case VALE4:
+            if(IsRectangleClicked(interface.getAcceptButtonRect())){
+                vale4Aceito = true;
+                SendGamestate(VALE4_ACCEPT);
+            }
+            if(IsRectangleClicked(interface.getRejectButtonRect())){
+                SendGamestate(VALE4_REJECT);
+            }     
+            break;
+        case TRUCO_ACCEPT:
+        case RETRUCO_ACCEPT:
+        case VALE4_ACCEPT:
+            SelectHandCard();
+            trucoAceito = true;  // ← Marca que aceitou
+            retrucoAceito = true;
+            vale4Aceito = true;
+            break;
         case WIN:
-            printf("You win!\n");
+            // printf("You win!\n");
             break;
         case LOSE:
-            printf("You lose!\n");
+            // printf("You lose!\n");
             break;
         default:
             break;
@@ -174,7 +219,7 @@ bool game::IsRectangleClicked(Rectangle rect) {
     return false;
 }
 
-/// Envia um estado (gamestate) para o servidor
+// Envia um estado (gamestate) para o servidor
 void game::SendGamestate(gamestate newState) {
     PacoteTurno pkt;
     pkt.isFirst = this->PacoteAtual.isFirst;
@@ -214,10 +259,12 @@ void game::SendGamestate(gamestate newState) {
     this->pendingPacket = pkt;
     this->localPlayPending = true;
     
-    this->PacoteAtual.state = WAIT;
+    // MUDANÇA AQUI: Coloca o cliente em WAIT localmente
+    this->estado = WAIT;
+    
     // Envia o pacote ao servidor
     net.sendPlay(*this);
-    printf("Sent gamestate %d to server with current context\n", newState);
+    printf("Sent gamestate %d to server (client now in WAIT)\n", newState);
 }
 
 void game::SelectHandCard(){
@@ -227,7 +274,6 @@ void game::SelectHandCard(){
 
     if(!arrastando && IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
         Vector2 mp = GetMousePosition();
-        printf("MouseDown at %.1f, %.1f\n", mp.x, mp.y);
         for (size_t i = 0; i < players[0].mao.size(); ++i) {
             if (!players[0].mao[i].isActive()) continue;
             if (CheckCollisionPointRec(GetMousePosition(), players[0].mao[i].getRect())) {
@@ -291,7 +337,6 @@ void game::SelectHandCard(){
                     
                     // Send to server
                     net.sendPlay(*this);
-                    
                 }
             } else {
                 // Restore positions if dropped outside table

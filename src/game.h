@@ -35,6 +35,7 @@ class game{
 
         gamestate estado;
         PacoteTurno PacoteAtual;
+        bool trucoAceito = false,retrucoAceito = false, vale4Aceito = false;
         // Local pending play (applied locally until server confirmation)
         bool localPlayPending;
         PacoteTurno pendingPacket;

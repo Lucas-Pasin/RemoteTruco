@@ -18,7 +18,12 @@ enum gamestate{
     TRUCO_REJECT,
     RETRUCO,
     RETRUCO_ACCEPT,
-    RETRUCO_REJECT
+    RETRUCO_REJECT,
+    VALE4,
+    VALE4_ACCEPT,
+    VALE4_REJECT,
+    ROUND_WIN,
+    ROUND_LOSE
 };
 
 enum Place {hand,table,enemy_table};

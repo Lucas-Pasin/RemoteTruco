@@ -32,11 +32,25 @@ void UI::DrawGamestate(gamestate state, float centerX, float centerY){
         case ROUND_START:
             DrawText("New Round Starting!", centerX, centerY, 20, BLUE);
             break;
+        case VALE4:
+            DrawText("VALE 4 called!", centerX, centerY, 20, MAROON);
+            break;
+        case TRUCO_ACCEPT:
+        case RETRUCO_ACCEPT:
+        case VALE4_ACCEPT:
+            DrawText("Accepted Truco!", centerX, centerY, 20, GREEN);
+            break;
         case WIN:
             DrawText("You Win!", centerX, centerY, 20, GOLD);
             break;
         case LOSE:
             DrawText("You Lose!", centerX, centerY, 20, RED);
+            break;
+        case ROUND_LOSE:
+            DrawText("You lost the round!", centerX, centerY, 20, RED);
+            break;
+        case ROUND_WIN:
+            DrawText("You won the round!", centerX, centerY, 20, GOLD);
             break;
         default:
             break;
@@ -77,11 +91,11 @@ void UI::DrawTrucoButton(gamestate state, Rectangle buttonRect){
     
     switch(state){
         case TRUCO:
-            buttonText = "TRUCO!";
+            buttonText = "RETRUCO!";
             textColor = RED;
             break;
         case RETRUCO:
-            buttonText = "RETRUCO!";
+            buttonText = "VALE_4!";
             textColor = ORANGE;
             break;
         case PLAY:
@@ -106,7 +120,7 @@ void UI::DrawTrucoButton(gamestate state, Rectangle buttonRect){
 
 void UI::DrawTrucoResponseButtons(gamestate state){
     // Só mostra os botões se estado é TRUCO ou RETRUCO
-    if (state != TRUCO && state != RETRUCO) {
+    if (state != TRUCO && state != RETRUCO && state != VALE4 ) {
         return;
     }
     
