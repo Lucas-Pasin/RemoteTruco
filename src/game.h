@@ -17,6 +17,12 @@ class game{
 
         void SelectHandCard();
         
+        // Detecta clique em um retângulo qualquer
+        bool IsRectangleClicked(Rectangle rect);
+        
+        // Envia um estado (gamestate) para o servidor
+        void SendGamestate(gamestate newState);
+        
             // Apply the latest received network packet to the game state
         void ApplyPacoteToHands();
         // Thread-safe enqueue from network thread

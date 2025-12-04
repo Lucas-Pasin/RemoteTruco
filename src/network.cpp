@@ -114,7 +114,7 @@ bool network::sendPlay(game &g) {
     // CORREÇÃO CRÍTICA: envia pendingPacket em vez de PacoteAtual
     // PacoteAtual contém o estado ANTIGO do servidor
     // pendingPacket contém o estado NOVO após a jogada local
-    printf("Enviando pacote de jogada ao servidor...\n");
+    // printf("Enviando pacote de jogada ao servidor...\n");
     send_all(this->sock, &g.pendingPacket, sizeof(PacoteTurno));
     return true;
 }

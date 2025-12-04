@@ -72,15 +72,42 @@ void game::Update(){
 
     // Apply network packet OR pending packet to keep UI in sync
     ApplyPacoteToHands();
-
+    this->estado = (gamestate)PacoteAtual.state;
     switch ((gamestate)PacoteAtual.state){
         case PLAY:
-            printf("State: PLAY\n");
             SelectHandCard();
+            if(IsRectangleClicked(interface.getTrucoButtonRect())){
+                SendGamestate(TRUCO);
+            }
             break;
         case WAIT:
             break;
         case ROUND_START:
+            break;
+        case TRUCO:
+            if(IsRectangleClicked(interface.getTrucoButtonRect())){
+                SendGamestate(RETRUCO);
+            }
+            if(IsRectangleClicked(interface.getAcceptButtonRect())){
+                SendGamestate(TRUCO_ACCEPT);
+            }
+            if(IsRectangleClicked(interface.getRejectButtonRect())){
+                SendGamestate(TRUCO_REJECT);
+            }
+            break;
+        case RETRUCO:
+            if(IsRectangleClicked(interface.getAcceptButtonRect())){
+                SendGamestate(RETRUCO_ACCEPT);
+            }
+            if(IsRectangleClicked(interface.getRejectButtonRect())){
+                SendGamestate(RETRUCO_REJECT);
+            }     
+            break;
+        case WIN:
+            printf("You win!\n");
+            break;
+        case LOSE:
+            printf("You lose!\n");
             break;
         default:
             break;
@@ -136,6 +163,58 @@ void game::PushPacote(const PacoteTurno& p) {
     pacoteQueue.push(p);
 }
 
+// Detecta se o usuário clicou em um retângulo qualquer
+bool game::IsRectangleClicked(Rectangle rect) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        Vector2 mousePos = GetMousePosition();
+        if (CheckCollisionPointRec(mousePos, rect)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Envia um estado (gamestate) para o servidor
+void game::SendGamestate(gamestate newState) {
+    PacoteTurno pkt;
+    pkt.isFirst = this->PacoteAtual.isFirst;
+    pkt.state = newState;
+    
+    // Initialize all as invalid first
+    for (int i = 0; i < 9; ++i) {
+        pkt.cards[i].numero = -1;
+        pkt.cards[i].score = 0;
+        pkt.cards[i].place = hand;
+    }
+    
+    // Preenche o pacote com o contexto atual do cliente
+    int idx = 0;
+    
+    // Adiciona cartas da mão (player 0)
+    for (size_t h = 0; h < players[0].mao.size() && idx < 9; ++h) {
+        card hc = players[0].mao[h].cardGet();
+        pkt.cards[idx].numero = hc.numero;
+        pkt.cards[idx].naipe = hc.naipe;
+        pkt.cards[idx].score = hc.score;
+        pkt.cards[idx].place = hand;
+        ++idx;
+    }
+    
+    // Adiciona cartas da mesa (player 0's table)
+    for (size_t m = 0; m < mesa.size() && idx < 9; ++m) {
+        card mc = mesa[m].cardGet();
+        pkt.cards[idx].numero = mc.numero;
+        pkt.cards[idx].naipe = mc.naipe;
+        pkt.cards[idx].score = mc.score;
+        pkt.cards[idx].place = table;
+        ++idx;
+    }
+    
+    // Envia o pacote ao servidor
+    net.sendPlay(*this);
+    printf("Sent gamestate %d to server with current context\n", newState);
+}
+
 void game::SelectHandCard(){
     static bool arrastando = false;
     static int cartaSelecionada = -1;
@@ -149,7 +228,6 @@ void game::SelectHandCard(){
             if (CheckCollisionPointRec(GetMousePosition(), players[0].mao[i].getRect())) {
                 arrastando = true;
                 cartaSelecionada = (int)i;
-                printf("Picked card %d\n", (int)i);
                 break;
             }
         }
@@ -209,14 +287,12 @@ void game::SelectHandCard(){
                     // Send to server
                     net.sendPlay(*this);
                     
-                    printf("Enviado pacote com carta jogada: %d\n", playedCard.numero);
                 }
             } else {
                 // Restore positions if dropped outside table
                 for (size_t idx = 0; idx < players[0].mao.size(); ++idx) {
                     players[0].mao[idx].setPos(idx*100.0f + 120.0f, 600.0f);
                 }
-                printf("Dropped card %d outside table\n", cartaSelecionada);
             }
         }
         arrastando = false;

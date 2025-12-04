@@ -7,7 +7,19 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-enum gamestate{PLAY,WAIT,ROUND_START};
+enum gamestate{
+    PLAY,
+    WAIT,
+    ROUND_START,
+    WIN,
+    LOSE,
+    TRUCO,
+    TRUCO_ACCEPT,
+    TRUCO_REJECT,
+    RETRUCO,
+    RETRUCO_ACCEPT,
+    RETRUCO_REJECT
+};
 
 enum Place {hand,table,enemy_table};
 

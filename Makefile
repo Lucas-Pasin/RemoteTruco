@@ -367,10 +367,13 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 SRC_DIR = src
 OBJ_DIR = obj
 
-# Define all object files from source files
-SRC = $(call rwildcard, *.c, *.h)
-#OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS ?= main.c
+# Collect C/C++ source files from $(SRC_DIR). Projects using C++ put sources under src/
+# Use wildcard to find .cpp files; if you need .c support add them too.
+CPP_SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+CC_SRCS  := $(wildcard $(SRC_DIR)/*.c)
+
+# By default link all found source files (you can override OBJS on the make command line)
+OBJS ?= $(CPP_SRCS) $(CC_SRCS)
 
 # For Android platform we call a custom Makefile.Android
 ifeq ($(PLATFORM),PLATFORM_ANDROID)

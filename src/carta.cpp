@@ -18,8 +18,7 @@ carta::carta(int num, naipes naip, int scor, Texture2D* texture){
     this->naipe = naip;
     this->score = scor;
 
-    //carregar textura
-    if(num > 7) num -= 2; //ajustar numero para pegar a imagem correta
+
     this->textura = texture;
     if (this->textura && this->textura->height > 0) {
         cartaRect.height = this->textura->height;
@@ -62,11 +61,12 @@ void carta::cartaToCard(card cartinha){
     this->score = cartinha.score;
     int num = this->numero;
     if(num > 7) num -= 2; //ajustar numero para pegar a imagem correta
-    int index = num + (int)naipe * 10;
+    int index = num - 1 + (int)naipe * 10;
     if (index >= 0 && index < 40) {
-        // point to the correct texture in the global array
+        //printf("Assigning texture index [%d] for card [numero: %d naipe: %d\n]", index, this->numero, (int)this->naipe);
+        
         this->textura = &cardTextures[index];
-        // update rect size from the assigned texture
+        
         this->cartaRect.width = this->textura->width;
         this->cartaRect.height = this->textura->height;
     }
