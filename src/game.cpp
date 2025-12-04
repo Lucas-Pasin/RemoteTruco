@@ -174,7 +174,7 @@ bool game::IsRectangleClicked(Rectangle rect) {
     return false;
 }
 
-// Envia um estado (gamestate) para o servidor
+/// Envia um estado (gamestate) para o servidor
 void game::SendGamestate(gamestate newState) {
     PacoteTurno pkt;
     pkt.isFirst = this->PacoteAtual.isFirst;
@@ -210,6 +210,11 @@ void game::SendGamestate(gamestate newState) {
         ++idx;
     }
     
+    // CRÍTICO: Salva o pacote e marca como pendente
+    this->pendingPacket = pkt;
+    this->localPlayPending = true;
+    
+    this->PacoteAtual.state = WAIT;
     // Envia o pacote ao servidor
     net.sendPlay(*this);
     printf("Sent gamestate %d to server with current context\n", newState);
