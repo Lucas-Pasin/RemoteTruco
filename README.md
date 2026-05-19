@@ -19,5 +19,5 @@ As regras do jogo serão baseadas no documento **regras-truco.pdf** fornecido pe
 - Implementação das regras de Truco conforme o pdf.  
 
 ## Blibliotecas Utilizadas
-
+- raylib
 
