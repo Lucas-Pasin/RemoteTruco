@@ -4,6 +4,16 @@
 *.a
 *.so
 
+# Compiled executables
+UI
+c_cpp_properties
+carta
+game
+main
+meujogo
+network
+player
+
 *.log
 
 *.code-workspace
