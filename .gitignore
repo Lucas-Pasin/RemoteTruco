@@ -1,3 +1,15 @@
 *.exe
 *.dsym
-main
+*.o
+*.a
+*.so
+
+*.log
+
+*.code-workspace
+.vscode/
+c_cpp_properties.json
+
+build/
+bin/
+dist/

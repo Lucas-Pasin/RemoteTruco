@@ -3,33 +3,63 @@
 #include <pthread.h>
 #include <iostream>
 
-network::network(){
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-        perror("Erro ao criar socket");
-        exit(1);
+network::network(){}
+
+bool network::isConnected(){
+    return connected;
+}
+
+void network::checkConnectionStatus(){
+    if (!connected) {
+        fd_set wfds;
+        struct timeval tv;
+        FD_ZERO(&wfds);
+        FD_SET(sock, &wfds);
+        tv.tv_sec = 0;
+        tv.tv_usec = 100000;
+        int sel = select(sock+1, NULL, &wfds, NULL, &tv);
+        if (sel > 0 && FD_ISSET(sock, &wfds)) {
+            int err = 0;
+            socklen_t len = sizeof(err);
+            if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &len) == 0 && err == 0) {
+                this->connected = true;
+                int flags = fcntl(sock, F_GETFL, 0);
+                fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
+                cout << "Conectado ao servidor com sucesso!" << endl;
+            }
+        }
     }
+}
 
-    struct sockaddr_in serv_addr {};
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(LISTEN_PORT);
+void network::connectToServer(string ip, int port) {
+    if (!connected) {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock < 0) {
+            perror("Erro ao criar socket");
+            return;
+        }
 
-    if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {
-        cerr << "Endereço IP inválido: " << SERVER_IP << endl;
-        exit(1);
-    }
+        struct sockaddr_in serv_addr {};
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(port);
 
-    cout << "Conectando ao servidor..." << endl;
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+        if (inet_pton(AF_INET, ip.c_str(), &serv_addr.sin_addr) <= 0) {
+            cerr << "Endereço IP inválido: " << ip << endl;
+            return;
+        }
 
-    int res = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if (res == 0) {
-        this->connected = true;
-        fcntl(sock, F_SETFL, flags);
-        cout << "Conectado ao servidor!" << endl;
-    } else {
-        cout << "Conexão assíncrona iniciada; thread de rede fará novas tentativas." << endl;
+        cout << "Conectando ao servidor..." << endl;
+        int flags = fcntl(sock, F_GETFL, 0);
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+        int res = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+        if (res == 0) {
+            this->connected = true;
+            fcntl(sock, F_SETFL, flags);
+            cout << "Conectado ao servidor!" << endl;
+        } else {
+            cout << "Conexão assíncrona iniciada; thread de rede fará novas tentativas." << endl;
+        }
     }
 }
 

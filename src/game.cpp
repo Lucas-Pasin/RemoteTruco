@@ -74,13 +74,16 @@ void game::Update(){
         }
     }
 
-    // Apply network packet OR pending packet to keep UI in sync
-    ApplyPacoteToHands();
-    
-    // Only update estado if we received a new packet from server
-    if (receivedNewPacket) {
-        this->estado = (gamestate)PacoteAtual.state;
+    if(!(this->estado == PLAY)) {
+        // Apply network packet OR pending packet to keep UI in sync
+        ApplyPacoteToHands();
+        
+        // Only update estado if we received a new packet from server
+        if (receivedNewPacket) {
+            this->estado = (gamestate)PacoteAtual.state;
+        }
     }
+    
     
     // Use this->estado (persists between frames) instead of PacoteAtual.state
     switch (this->estado){
@@ -93,6 +96,9 @@ void game::Update(){
             }
             
             break;
+        case PLAYED_CARD:
+            // After playing a card, client waits for server confirmation - no actions allowed
+            break; 
         case WAIT:
             // Waiting for server response - no actions allowed
             break;
@@ -143,10 +149,11 @@ void game::Update(){
         case TRUCO_ACCEPT:
         case RETRUCO_ACCEPT:
         case VALE4_ACCEPT:
-            SelectHandCard();
+            //SelectHandCard();
             trucoAceito = true;  // ← Marca que aceitou
             retrucoAceito = true;
             vale4Aceito = true;
+            this->estado = PLAY;
             break;
         case WIN:
             mesa.clear();
@@ -302,7 +309,6 @@ void game::SelectHandCard(){
     const Rectangle table_rect = interface.getRec();
 
     if(!arrastando && IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
-        Vector2 mp = GetMousePosition();
         for (size_t i = 0; i < players[0].mao.size(); ++i) {
             if (!players[0].mao[i].isActive()) continue;
             if (CheckCollisionPointRec(GetMousePosition(), players[0].mao[i].getRect())) {
@@ -331,7 +337,8 @@ void game::SelectHandCard(){
                     // Build pending packet with the NEW state (after removing the card)
                     PacoteTurno pkt;
                     pkt.isFirst = this->PacoteAtual.isFirst;
-                    pkt.state = WAIT;
+                    //pkt.state = WAIT;
+                    pkt.state = PLAYED_CARD; // This indicates to the server that this packet is a result of a local play
                     
                     // Initialize all as invalid
                     for (int k = 0; k < 9; ++k) {
@@ -363,7 +370,7 @@ void game::SelectHandCard(){
                     // Set pending state - this prevents the old PacoteAtual from resetting the hand
                     this->pendingPacket = pkt;
                     this->localPlayPending = true;
-                    
+                    this->estado = PLAYED_CARD; // Client send PLAYED_CARD to indicate a local play has been made (server should respond with updated state)
                     // Send to server
                     net.sendPlay(*this);
                 }

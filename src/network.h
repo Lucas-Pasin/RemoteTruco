@@ -23,7 +23,8 @@ enum gamestate{
     VALE4_ACCEPT,
     VALE4_REJECT,
     ROUND_WIN,
-    ROUND_LOSE
+    ROUND_LOSE,
+    PLAYED_CARD
 };
 
 enum Place {hand,table,enemy_table};
@@ -51,6 +52,9 @@ class network{
     public:
         network();
         struct PacoteTurno rec_jogada();
+        bool isConnected();
+        void connectToServer(string ip = SERVER_IP, int port = LISTEN_PORT);
+        void checkConnectionStatus(); // Verifica se conexão assíncrona completou
         void getPlay(game &g);
         void startThread(game &g);
         bool sendPlay(game &g);
